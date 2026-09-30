@@ -17,7 +17,8 @@ struct TabModel: Identifiable {
 let tabs = [
     TabModel(label: "Home", icon: "house.fill", view: .home),
     TabModel(label: "Shelf", icon: "tray.fill", view: .shelf),
-    TabModel(label: "Limits", icon: "gauge.with.dots.needle.67percent", view: .limits)
+    TabModel(label: "Limits", icon: "gauge.with.dots.needle.67percent", view: .limits),
+    TabModel(label: "Буфер", icon: "doc.on.clipboard", view: .clipboard)
 ]
 
 struct TabSelectionView: View {
