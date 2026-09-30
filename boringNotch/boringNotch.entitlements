@@ -29,6 +29,7 @@
 	<array>
 		<string>/.codex/</string>
 		<string>/.claude/</string>
+		<string>/Library/Application Support/Claude/plan-usage-history.json</string>
 	</array>
 	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
 	<array>

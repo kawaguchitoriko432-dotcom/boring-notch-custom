@@ -2,7 +2,7 @@
 //  LimitsModels.swift
 //  boringNotch
 //
-//  Модели лимитов Claude Code / Codex для вкладки «Лимиты».
+//  Модели лимитов Claude / Codex для вкладки «Лимиты».
 //
 
 import Foundation
@@ -14,6 +14,8 @@ struct LimitWindow: Equatable {
     var usedPercent: Double
     /// Когда окно сбросится.
     var resetsAt: Date?
+    /// Время сброса вычислено приблизительно (в источнике его нет).
+    var resetsApproximate: Bool = false
 
     /// Окно уже закончилось — значит, лимит сброшен.
     func isExpired(now: Date = Date()) -> Bool {

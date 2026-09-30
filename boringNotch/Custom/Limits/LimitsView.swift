@@ -2,7 +2,7 @@
 //  LimitsView.swift
 //  boringNotch
 //
-//  Вкладка «Лимиты»: две карточки (Claude Code и Codex).
+//  Вкладка «Лимиты»: две карточки (Claude и Codex).
 //
 
 import SwiftUI
@@ -13,10 +13,10 @@ struct LimitsView: View {
     var body: some View {
         HStack(spacing: 10) {
             LimitCard(
-                title: "Claude Code",
+                title: "Claude",
                 symbol: "sun.max.fill",
                 limits: manager.claude,
-                emptyHint: "Лимиты Claude (Cowork) подключим позже."
+                emptyHint: "Нет данных. Откройте приложение Claude."
             )
             LimitCard(
                 title: "Codex",
@@ -133,6 +133,7 @@ private struct LimitRow: View {
         let used = Int((100 - window.remainingPercent(now: now)).rounded())
         guard let reset = window.resetsAt else { return "Исп. \(used)%" }
         if window.isExpired(now: now) { return "Лимит сброшен" }
-        return "Исп. \(used)% · сброс через \(LimitsFormat.duration(until: reset, now: now)) · \(LimitsFormat.clock(reset))"
+        let approx = window.resetsApproximate ? "≈" : ""
+        return "Исп. \(used)% · сброс через \(approx)\(LimitsFormat.duration(until: reset, now: now)) · \(approx)\(LimitsFormat.clock(reset))"
     }
 }

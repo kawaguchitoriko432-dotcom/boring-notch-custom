@@ -39,7 +39,7 @@ final class LimitsManager: ObservableObject {
     private func apply(claude newClaude: ProviderLimits, codex newCodex: ProviderLimits) {
         if newClaude != claude { claude = newClaude }
         if newCodex != codex { codex = newCodex }
-        checkNotifications(name: "Claude Code", limits: newClaude)
+        checkNotifications(name: "Claude", limits: newClaude)
         checkNotifications(name: "Codex", limits: newCodex)
     }
 
@@ -51,7 +51,9 @@ final class LimitsManager: ObservableObject {
         guard remaining <= notifyThreshold else { return }
 
         // Один раз на каждое окно (ключ включает время сброса).
-        let key = "\(name)-\(Int(window.resetsAt?.timeIntervalSince1970 ?? 0))"
+        // Если времени сброса нет, привязываемся к 5-часовому «корзинному» окну.
+        let stamp = window.resetsAt?.timeIntervalSince1970 ?? (Date().timeIntervalSince1970 / 18_000).rounded(.down)
+        let key = "\(name)-\(Int(stamp))"
         guard !notified.contains(key) else { return }
         notified.insert(key)
 

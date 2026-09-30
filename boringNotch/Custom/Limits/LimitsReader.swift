@@ -4,9 +4,9 @@
 //
 //  Читает лимиты из локальных файлов. Ни токены, ни ключи, ни сеть не используются.
 //
-//  Claude Code: файл ~/.claude/notch-limits.json, который пишет хук statusline
-//               (tools/claude-notch-statusline.sh). Claude Code сам отдаёт
-//               rate_limits.five_hour / seven_day в JSON для statusline.
+//  Claude:      ~/Library/Application Support/Claude/plan-usage-history.json
+//               (пишет приложение Claude, покрывает и Cowork); запасной вариант —
+//               ~/.claude/notch-limits.json от хука statusline Claude Code.
 //  Codex:       ~/.codex/sessions/ГГГГ/ММ/ДД/rollout-*.jsonl — в событиях
 //               token_count лежит rate_limits.primary / secondary.
 //
@@ -23,9 +23,70 @@ enum LimitsReader {
         return FileManager.default.homeDirectoryForCurrentUser
     }
 
-    // MARK: - Claude Code
+    // MARK: - Claude (приложение Claude / Cowork)
 
+    /// Читает `plan-usage-history.json`, который ведёт само приложение Claude:
+    /// замеры {t (мс), u: {fh: % за 5 ч, sd: % за неделю}}. Ничего, кроме времени и
+    /// двух процентов, не используется (поле org игнорируется). Формат внутренний,
+    /// поэтому проверяем version; если он другой, источник считается недоступным.
+    /// Сначала пробуем этот файл, потом (запасной вариант) хук Claude Code.
     static func readClaude() -> ProviderLimits {
+        if let app = readClaudeApp() { return app }
+        return readClaudeCodeHook()
+    }
+
+    private static func readClaudeApp() -> ProviderLimits? {
+        let url = realHome.appendingPathComponent("Library/Application Support/Claude/plan-usage-history.json")
+        guard
+            let data = try? Data(contentsOf: url),
+            let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            (obj["version"] as? NSNumber)?.intValue == 2,
+            let raw = obj["samples"] as? [[String: Any]]
+        else { return nil }
+
+        struct Sample { let t: Date; let fh: Double; let sd: Double }
+        let samples: [Sample] = raw.compactMap { d in
+            guard
+                let t = (d["t"] as? NSNumber)?.doubleValue,
+                let u = d["u"] as? [String: Any],
+                let fh = (u["fh"] as? NSNumber)?.doubleValue,
+                let sd = (u["sd"] as? NSNumber)?.doubleValue
+            else { return nil }
+            return Sample(t: Date(timeIntervalSince1970: t / 1000), fh: fh, sd: sd)
+        }.sorted { $0.t < $1.t }
+        guard let last = samples.last else { return nil }
+
+        // Начало текущей 5-часовой сессии: идём назад, пока процент не убывает
+        // и между замерами нет разрыва больше 5 часов.
+        let window: TimeInterval = 5 * 3600
+        var first = samples.count - 1
+        while first > 0 {
+            let prev = samples[first - 1], cur = samples[first]
+            if prev.fh > cur.fh || cur.t.timeIntervalSince(prev.t) >= window { break }
+            first -= 1
+        }
+        var sessionReset: Date? = samples[first].t.addingTimeInterval(window)
+        if let r = sessionReset, r <= Date() { sessionReset = nil }  // оценка устарела
+
+        var five = LimitWindow(usedPercent: last.fh, resetsAt: sessionReset)
+        five.resetsApproximate = true
+        var week = LimitWindow(usedPercent: last.sd, resetsAt: nextWeeklyReset(after: Date()))
+        week.resetsApproximate = true
+        return ProviderLimits(fiveHour: five, weekly: week, updatedAt: last.t)
+    }
+
+    /// Недельный сброс: по экрану Usage — четверг 01:00 по местному времени.
+    private static func nextWeeklyReset(after now: Date) -> Date? {
+        var comps = DateComponents()
+        comps.weekday = 5  // четверг
+        comps.hour = 1
+        comps.minute = 0
+        return Calendar.current.nextDate(
+            after: now, matching: comps, matchingPolicy: .nextTime)
+    }
+
+    /// Запасной источник: файл, который пишет хук статус-строки Claude Code.
+    private static func readClaudeCodeHook() -> ProviderLimits {
         let url = realHome.appendingPathComponent(".claude/notch-limits.json")
         guard
             let data = try? Data(contentsOf: url),
