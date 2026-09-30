@@ -54,7 +54,8 @@ enum LimitsReader {
         let sessions = realHome.appendingPathComponent(".codex/sessions", isDirectory: true)
         let files = newestRolloutFiles(in: sessions, limit: 4)
 
-        var best: ProviderLimits?
+        // Живые данные от фонового агента (tools/codex-limits-agent.pl), если он установлен.
+        var best: ProviderLimits? = readCodexLiveFile()
         for file in files {
             guard let candidate = lastCodexLimits(in: file) else { continue }
             if best == nil || (candidate.updatedAt ?? .distantPast) > (best?.updatedAt ?? .distantPast) {
@@ -62,6 +63,36 @@ enum LimitsReader {
             }
         }
         return best ?? ProviderLimits()
+    }
+
+    /// Файл ~/.codex/notch-limits-live.json: его раз в 5 минут пишет агент, спрашивая у codex app-server.
+    private static func readCodexLiveFile() -> ProviderLimits? {
+        let url = realHome.appendingPathComponent(".codex/notch-limits-live.json")
+        guard
+            let data = try? Data(contentsOf: url),
+            let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return nil }
+
+        var result = ProviderLimits()
+        for key in ["primary", "secondary"] {
+            guard
+                let w = obj[key] as? [String: Any],
+                let used = (w["used_percent"] as? NSNumber)?.doubleValue
+            else { continue }
+            let resetsAt = (w["resets_at"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) }
+            let minutes = (w["window_minutes"] as? NSNumber)?.doubleValue ?? (key == "primary" ? 300 : 10_080)
+            let window = LimitWindow(usedPercent: used, resetsAt: resetsAt)
+            if minutes <= 360 {
+                result.fiveHour = window
+            } else {
+                result.weekly = window
+            }
+        }
+        guard result.hasData else { return nil }
+        if let updated = (obj["updated"] as? NSNumber)?.doubleValue {
+            result.updatedAt = Date(timeIntervalSince1970: updated)
+        }
+        return result
     }
 
     /// Самые свежие rollout-файлы. Не обходим всё дерево: берём три последних дня.
