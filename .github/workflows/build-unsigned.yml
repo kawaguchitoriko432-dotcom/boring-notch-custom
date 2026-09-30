@@ -4,7 +4,7 @@ name: Build (unsigned)
 on: workflow_dispatch
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
         with:
@@ -13,7 +13,7 @@ jobs:
         run: |
           xcodebuild -project boringNotch.xcodeproj -scheme boringNotch -configuration Release \
             -derivedDataPath build CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO \
-            DEVELOPMENT_TEAM="" build
+            DEVELOPMENT_TEAM="" ARCHS=arm64 ONLY_ACTIVE_ARCH=NO build
       - name: Zip
         run: |
           ditto "build/Build/Products/Release/Boring Notch.app" boringNotch.app
