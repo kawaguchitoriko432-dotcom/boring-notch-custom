@@ -16,6 +16,7 @@ jobs:
             DEVELOPMENT_TEAM="" ARCHS=arm64 ONLY_ACTIVE_ARCH=NO build
       - name: Zip
         run: |
+          codesign --force --deep --sign - "build/Build/Products/Release/Boring Notch.app"
           ditto "build/Build/Products/Release/Boring Notch.app" boringNotch.app
           ditto -c -k --keepParent boringNotch.app boringNotch-unsigned.zip
       - uses: actions/upload-artifact@v4
