@@ -54,7 +54,13 @@ private struct LimitCard: View {
                     }
                 }
 
-                if limits.hasData {
+                if limits.needsRefresh(now: context.date) {
+                    Text("Лимит сброшен. Отправьте любой запрос в Codex — данные обновятся автоматически.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                } else if limits.hasData {
                     if let five = limits.fiveHour {
                         LimitRow(label: "5 ч", window: five, now: context.date)
                     }

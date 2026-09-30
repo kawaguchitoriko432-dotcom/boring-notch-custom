@@ -36,6 +36,15 @@ struct ProviderLimits: Equatable {
     var updatedAt: Date?
 
     var hasData: Bool { fiveHour != nil || weekly != nil }
+
+    /// После сброса старый snapshot уже нельзя считать целиком достоверным:
+    /// серверный reset (в том числе полный) попадёт в журнал только с новым запросом Codex.
+    func needsRefresh(now: Date = Date()) -> Bool {
+        guard let updatedAt else { return false }
+        return [fiveHour, weekly].compactMap { $0?.resetsAt }.contains {
+            $0 > updatedAt && $0 <= now
+        }
+    }
 }
 
 /// Уровень «здоровья» лимита — задаёт цвет.
