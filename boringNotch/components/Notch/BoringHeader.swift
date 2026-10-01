@@ -58,6 +58,23 @@ struct BoringHeader: View {
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
+                        // Вкладка «Кнопки» справа, чтобы её не закрывал вырез камеры.
+                        Button(action: {
+                            withAnimation(.smooth) {
+                                coordinator.currentView = .tools
+                            }
+                        }) {
+                            Capsule()
+                                .fill(coordinator.currentView == .tools ? Color(nsColor: .secondarySystemFill) : Color.black)
+                                .frame(width: 30, height: 30)
+                                .overlay {
+                                    Image(systemName: "square.grid.2x2.fill")
+                                        .foregroundColor(coordinator.currentView == .tools ? .white : .gray)
+                                        .padding()
+                                        .imageScale(.medium)
+                                }
+                        }
+                        .buttonStyle(PlainButtonStyle())
                         if Defaults[.settingsIconInNotch] {
                             Button(action: {
                                 DispatchQueue.main.async {

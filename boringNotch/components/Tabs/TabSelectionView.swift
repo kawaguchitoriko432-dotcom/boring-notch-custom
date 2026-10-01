@@ -14,12 +14,14 @@ struct TabModel: Identifiable {
     let view: NotchViews
 }
 
+// Порядок: буфер обмена первым (он открывается по умолчанию), музыка (Home) последней.
+// Вкладка «Кнопки» вынесена в шапку справа, рядом с шестерёнкой (см. BoringHeader):
+// слева от выреза камеры помещаются только четыре значка.
 let tabs = [
-    TabModel(label: "Home", icon: "house.fill", view: .home),
+    TabModel(label: "Буфер", icon: "doc.on.clipboard", view: .clipboard),
     TabModel(label: "Shelf", icon: "tray.fill", view: .shelf),
     TabModel(label: "Limits", icon: "gauge.with.dots.needle.67percent", view: .limits),
-    TabModel(label: "Буфер", icon: "doc.on.clipboard", view: .clipboard),
-    TabModel(label: "Кнопки", icon: "square.grid.2x2.fill", view: .tools)
+    TabModel(label: "Home", icon: "house.fill", view: .home)
 ]
 
 struct TabSelectionView: View {
