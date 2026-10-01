@@ -352,6 +352,8 @@ struct ContentView: View {
                         ShelfView()
                     case .clipboard:
                         ClipboardView()
+                    case .tools:
+                        ToolsView()
                     case .limits:
                         LimitsView()
                     }
