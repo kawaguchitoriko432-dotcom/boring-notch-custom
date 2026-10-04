@@ -75,6 +75,11 @@ struct BoringHeader: View {
                                 }
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .onHover { hovering in
+                            if hovering && coordinator.currentView != .tools {
+                                withAnimation(.smooth) { coordinator.currentView = .tools }
+                            }
+                        }
                         if Defaults[.settingsIconInNotch] {
                             Button(action: {
                                 DispatchQueue.main.async {

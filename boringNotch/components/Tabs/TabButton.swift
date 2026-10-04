@@ -20,6 +20,10 @@ struct TabButton: View {
                 .contentShape(Capsule())
         }
         .buttonStyle(PlainButtonStyle())
+        // Переключение наведением курсора (клик тоже работает)
+        .onHover { hovering in
+            if hovering && !selected { onClick() }
+        }
     }
 }
 
