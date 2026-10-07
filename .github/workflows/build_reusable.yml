@@ -146,13 +146,13 @@ jobs:
             "$APP_NAME $VERSION_INPUT"
 
       - name: Upload DMG
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ${{ env.PROJECT_NAME }}.dmg
           path: Release/${{ env.PROJECT_NAME }}.dmg
 
       - name: Upload .app
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ${{ env.APP_NAME }}.app
           path: Release/${{ env.APP_NAME }}.app
